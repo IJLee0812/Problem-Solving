@@ -1,38 +1,40 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int Map[501][501], visited[501][501], res = 0, dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1}, N, M;
+int N, M, paper[501][501], res = 0, dx[] = {-1, 1, 0, 0}, dy[] = {0, 0, -1, 1};
 
-void DFS(int x, int y, int cnt, int sum){
-    if (cnt == 4){ // 재귀 종료조건
-        if (res < sum) res = sum;
-        return; // 재귀 종료
+bool visited[501][501];
+
+void DFS(int x, int y, int cnt, int curSum){
+    if (cnt == 4){
+        if (res < curSum) res = curSum;
+        return;
     }
 
     for (int i = 0 ; i < 4 ; ++i){
         int nx = x + dx[i], ny = y + dy[i];
-        if (nx >= 1 && nx <= N && ny >= 1 && ny <= M && !visited[nx][ny]){
-            visited[nx][ny] = 1;
-            DFS(nx, ny, cnt + 1, sum + Map[nx][ny]);
-            visited[nx][ny] = 0; // Backtracking
+        if (nx >= 0 && nx < N && ny >= 0 && ny < M && !visited[nx][ny]){
+            visited[nx][ny] = true;
+            DFS(nx, ny, cnt + 1, curSum + paper[nx][ny]);
+            visited[nx][ny] = false;
         }
     }
 
-    // ㅓ
-    if (x - 1 >= 1 && x + 1 <= N && y - 1 >= 1)
-        res = max(res, Map[x][y] + Map[x - 1][y] + Map[x + 1][y] + Map[x][y - 1]);
+    if(y - 1 >= 0 && y + 1 < M && x - 1 >= 0){ // ㅗ
+        res = max(res, paper[x][y] + paper[x][y - 1] + paper[x][y + 1] + paper[x - 1][y]);
+    }
 
-    // ㅏ
-    if (x - 1 >= 1 && x + 1 <= N && y + 1 <= M)
-        res = max(res, Map[x][y] + Map[x][y + 1] + Map[x - 1][y] + Map[x + 1][y]);
+    if(y + 1 < M && x - 1 >= 0 && x + 1 < N){ // ㅏ
+        res = max(res, paper[x][y] + paper[x][y + 1] + paper[x - 1][y] + paper[x + 1][y]);
+    }
 
-    // ㅜ
-    if (x + 1 <= N && y - 1 >= 1 && y + 1 <= M)
-        res = max(res, Map[x][y] + Map[x + 1][y] + Map[x][y - 1] + Map[x][y + 1]);
+    if(y - 1 >= 0 && y + 1 < M && x + 1 < N){ // ㅜ
+        res = max(res, paper[x][y] + paper[x][y - 1]+ paper[x + 1][y] + paper[x][y + 1]);
+    }
 
-    // ㅗ
-    if (x - 1 >= 1 && y - 1 >= 1 && y + 1 <= M)
-        res = max(res, Map[x][y] + Map[x][y - 1] + Map[x][y + 1] + Map[x - 1][y]);
+    if(y - 1 >= 0 && x - 1 >= 0 && x + 1 < N){ // ㅓ
+        res = max(res, paper[x][y] + paper[x][y - 1] + paper[x - 1][y] + paper[x + 1][y]);
+    }
 }
 
 int main() {
@@ -40,19 +42,21 @@ int main() {
 
     cin >> N >> M;
 
-    for (int i = 1 ; i <= N ; ++i)
-        for (int j = 1 ; j <= M ; ++j)
-            cin >> Map[i][j];
+    for (int i = 0 ; i < N ; ++i)
+        for (int j = 0 ; j < M ; ++j)
+            cin >> paper[i][j];
 
-    for (int i = 1 ; i <= N ; ++i){
-        for (int j = 1 ; j <= M ; ++j){
-            visited[i][j] = 1;
-            DFS(i, j, 1, Map[i][j]);
-            visited[i][j] = 0; // Backtracking
+    for (int i = 0 ; i < N ; ++i){
+        for (int j = 0 ; j < M ; ++j){
+            if (!visited[i][j]){
+                visited[i][j] = true;
+                DFS(i, j, 1, paper[i][j]);
+                visited[i][j] = false; // backtracking
+            }
         }
     }
 
-    cout << res << '\n';
+    cout << res;
 
     return 0;
 }
