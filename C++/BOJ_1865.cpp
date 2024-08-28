@@ -1,4 +1,3 @@
-// vector v(n, x) : 모두 값 x으로 초기화된 n개의 원소를 가진 vector 생성
 #include <bits/stdc++.h>
 #define MAX 501
 #define INF 25000001
@@ -9,11 +8,11 @@ vector<pair<int, int>> graph[MAX];
 int TC, N, M, W, S, E, T;
 
 bool solve(){
-    vector<int> dist(N + 1, INF);
+    vector<int> dist(N + 1, INF); // vector v(n, x) : 모두 값 x으로 초기화된 n개의 원소를 가진 vector 생성
 
     dist[1] = 0;
 
-    for (int i = 1 ; i < N ; ++i){ // 출발 정점을 제외한 "N - 1"번 모든 최소경로를 다 구해야 함
+    for (int i = 1 ; i < N ; ++i){ // 출발 정점을 제외한 "N - 1"번 모든 최소경로를 다 구해야 함. O(V * E)
         for (int u = 1 ; u <= N ; ++u){
             for (auto node : graph[u]){
                 int v = node.first, w = node.second;
@@ -40,7 +39,7 @@ int main(){
     while (TC--){
         cin >> N >> M >> W;
 
-        for (int i = 1 ; i <= N ; ++i)
+        for (int i = 1 ; i <= N ; ++i) // 테스트케이스 마다 그래프 초기화 우선
             graph[i].clear();
 
         for (int i = 0 ; i < M ; ++i){
