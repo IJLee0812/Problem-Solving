@@ -1,53 +1,62 @@
-#include <iostream>
-#include <queue>
+#include <bits/stdc++.h>
 #define MAX 51
 using namespace std;
+
+int D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+int T, M, N, K, x, y; 
+
 struct Point{
     int x, y;
 };
 
-int Graph[MAX][MAX], M, N, K; 
-int D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+int graph[MAX][MAX], cnt;
 
-void BFS(int srcX, int srcY){
-    queue<Point> myqueue;
-    myqueue.push({srcX, srcY});
-    Graph[srcX][srcY] = 0;
-    while(!myqueue.empty()){
-        Point curr = myqueue.front();
-        myqueue.pop();
+void DFS(int x, int y){
+    stack<Point> mystack;
+    mystack.push({x, y});
+
+    while (!mystack.empty()){
+        Point curr = mystack.top();
+        mystack.pop();
+
         for (int i = 0 ; i < 4 ; ++i){
-            int nx = curr.x + D[i][0];
-            int ny = curr.y + D[i][1];
-            if (nx < 0 || nx > M-1 || ny < 0 || ny > N-1) continue;
-            if (Graph[nx][ny] == 0) continue;
-            Graph[nx][ny] = 0;
-            myqueue.push({nx, ny});
+            int nx = curr.x + D[i][0], ny = curr.y + D[i][1];
+
+            if (nx >= 0 && nx < M && ny >= 0 && ny < N){
+                if (graph[nx][ny] == 1){
+                    graph[nx][ny] = 0;
+                    DFS(nx, ny);
+                }
+            }
         }
     }
 }
 
 int main(){
+    ios_base::sync_with_stdio(0); cin.tie(0); cout.tie(0);
 
-    int T; cin >> T;
-    int x, y;
-    for (int i = 0 ; i < T ; ++i){
+    cin >> T;
+
+    while (T--){
+        memset(graph, 0, sizeof(graph));
         cin >> M >> N >> K;
-        for (int j = 0 ; j < K ; ++j){
+        
+        for (int i = 0 ; i < K ; ++i){
             cin >> x >> y;
-            Graph[x][y] = 1;
+            graph[x][y] = 1;
         }
 
-        int worm = 0;
-        for (int k = 0 ; k < M ; ++k){
-            for (int l = 0 ; l < N ; ++l){
-                if (Graph[k][l] == 1){
-                    BFS(k, l);
-                    worm++;
+        for (int i = 0 ; i < M ; ++i){
+            for (int j = 0 ; j < N ; ++j){
+                if (graph[i][j] == 1){
+                    cnt++;
+                    DFS(i, j);
                 }
             }
         }
-        cout << worm << '\n';
+
+        cout << cnt << '\n';
+        cnt = 0;
     }
 
     return 0;
