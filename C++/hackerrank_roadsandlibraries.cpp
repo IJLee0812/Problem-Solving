@@ -38,12 +38,12 @@ long roadsAndLibraries(int n, int c_lib, int c_road, vector<vector<int>> cities)
             
             int cnt = 1;
             
-            queue<int> q;
-            q.push(i);
+            queue<int> myqueue;
+            myqueue.push(i);
             
-            while (!q.empty()){
-                int curr = q.front();
-                q.pop();
+            while (!myqueue.empty()){
+                int curr = myqueue.front();
+                myqueue.pop();
                 
                 for (int k = 0 ; k < roads[curr].size() ; ++k){
                     int next = roads[curr][k];
@@ -51,7 +51,7 @@ long roadsAndLibraries(int n, int c_lib, int c_road, vector<vector<int>> cities)
                     if (!visited[next]){
                         visited[next] = true;
                         cnt++;
-                        q.push(next);
+                        myqueue.push(next);
                     }
                 }
             }
