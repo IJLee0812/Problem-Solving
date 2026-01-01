@@ -1,363 +1,311 @@
-#include <stdio.h>
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include <vector>
+#include <queue>
+#define MAX 16
+#define MAXQ 51
 
-#define MAX (15 + 5)
-#define MAX_Q (50 + 5)
+using namespace std;
 
 int T;
 int N, Q;
 int MAP[MAX][MAX];
+bool visited[MAX][MAX];
 
-struct QUERY
-{
-	int r1;
-	int c1;
-	int r2;
-	int c2;
+struct Point{
+    int r;
+    int c;
 };
+int D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-QUERY query[MAX_Q];
-
-struct MICRO
-{
-	int id;
-	int minR;
-	int minC;
-	int maxR;
-	int maxC;
-	int count;
+struct Query{
+    int r1;
+    int c1;
+    int r2;
+    int c2;
 };
+Query query[MAXQ];
 
-MICRO micro[MAX_Q];
-int mcnt;
-
-bool dead[MAX_Q]; // id로 따로 관리
-
-struct RC
-{
-	int r;
-	int c;
+struct Micro{
+    int id;     // 미생물의 id
+    int minR;
+    int minC;
+    int maxC;
+    int maxR;
+    int area;  // 미생물 영역 넓이
 };
+Micro micros[MAXQ];
+int mcnt;           // 살아있는 미생물의 개수 관리
 
-RC queue[MAX * MAX];
-bool visit[MAX][MAX];
+bool dead[MAXQ];    // 미생물의 id를 이용하여 생존 여부를 관리(dead / alive)
 
-// ↑, →, ↓, ←
-int dr[] = { -1, 0, 1, 0 };
-int dc[] = { 0, 1, 0, -1 };
-
-void input()
-{
-	scanf("%d %d", &N, &Q);
-
-	// 미생물 번호는 1번부터
-	for (int q = 1; q <= Q; q++)
-		scanf("%d %d %d %d", &query[q].r1, &query[q].c1, &query[q].r2, &query[q].c2);
+void fastio(){
+    cin.tie(0);
+    cout.tie(0);
+    ios_base::sync_with_stdio(0);
 }
 
-void printMap(int map[MAX][MAX]) // for debug
-{
-	for (int r = 0; r <= N; r++)
-	{
-		for (int c = 0; c <= N; c++)
-			printf("%d ", map[r][c]);
-		putchar('\n');
-	}
-	putchar('\n');
+void input(){
+    cin >> N >> Q;
+    for (int q = 1 ; q <= Q ; ++q){
+        cin >> query[q].r1 >> query[q].c1 >> query[q].r2 >> query[q].c2;
+    }
 }
 
-void printMicro(MICRO m)
-{
-	printf("id %d] (%d, %d) ~ (%d, %d) / count %d [dead=%d]\n",
-		m.id, m.minR, m.minC, m.maxR, m.maxC, m.count, dead[m.id]);
+// (r1, c1) ~ (r2 - 1, c2 - 1): 1을 뺀 만큼 투입해야 함
+void insert(int id, int r1, int c1, int r2, int c2){
+    for (int r = r1 ; r < r2 ; ++r){
+        for (int c = c1 ; c < c2 ; ++c){
+            MAP[r][c] = id;
+        }
+    }
 }
 
-void printMicroAll()
-{
-	for (int i = 0; i < mcnt; i++) printMicro(micro[i]);
+Micro BFS(int r, int c){
+    int minR, minC, maxR, maxC, area = 0;
+    queue<Point> myqueue;
+    myqueue.push({r, c});
+    visited[r][c] = true;
+    area++;
+
+    while (!myqueue.empty()){
+        Point curr = myqueue.front();
+        myqueue.pop();
+
+        for (int i = 0 ; i < 4 ; ++i){
+            int nr = curr.r + D[i][0];
+            int nc = curr.c + D[i][1];
+
+            // id가 다른 미생물이거나 || 기 탐색 완료했던 미생물인 경우 다음 탐색을 진행한다.
+            if (MAP[curr.r][curr.c] != MAP[nr][nc] || visited[nr][nc]) continue;
+
+            myqueue.push({nr, nc});
+            visited[nr][nc] = true;
+            area++;
+
+            // 좌표 min/max 지점 업데이트
+            if (nr < minR) minR = nr;
+            if (nc < minC) minC = nc;
+            if (nr > maxR) maxR = nr;
+            if (nc > maxC) maxC = nc;
+        }
+    }
+
+    Micro ret = { 0 };
+
+    ret.id = MAP[r][c];
+    ret.minR = minR;
+    ret.minC = minC;
+    ret.maxR = maxR;
+    ret.maxC = maxC;
+    ret.area = area;
+
+    return ret;
 }
 
-void insert(int id, int r1, int c1, int r2, int c2)
-{
-	for (int r = r1; r < r2; r++)
-		for (int c = c1; c < c2; c++)
-			MAP[r][c] = id;
+void findLiveMicro(){
+    // micro 배열의 인덱스(살아있는 미생물의 인덱스 관리)
+    mcnt = 0; 
+    // visited 배열 초기화
+    for (int r = 0 ; r <= N ; ++r){
+        for (int c = 0 ; c <= N ; ++c){
+            visited[r][c] = false;
+        }
+    }
+
+    bool check[MAXQ] = { false }; // 미생물 사망/생존 정보 저장
+    for (int r = 0 ; r < N ; ++r){ // 0 ~ N - 1
+        for (int c = 0 ; c < N ; ++c){
+            int id = MAP[r][c];
+
+            if (id == 0 || dead[id] == true || visited[r][c] == true) continue;
+
+            Micro m = BFS(r, c);
+
+            // check[미생물id] == true => 해당 미생물은 두 개로 분리되었으므로 사망처리 필요
+            if (check[id] == true){
+                dead[id] = true;
+                continue;
+            }
+
+            check[id] = true;
+            micros[mcnt++] = m;
+
+        }
+    }
+
+    // - - - 살아있는 미생물만 micros 배열에 재정리 - - -
+    int temp = mcnt;
+
+    mcnt = 0; // 재정리를 위한 개수 초기화
+
+    for (int i = 0 ; i < temp ; ++i){
+        if (dead[micros[i].id]) continue;
+
+        micros[mcnt++] = micros[i]; // micros 배열에 최종 저장
+    }
 }
 
-MICRO BFS(int r, int c)
-{
-	int rp, wp;
-	int minR, minC, maxR, maxC;
+// a가 우선순위가 더 높을 시 true
+bool isPriority(Micro a, Micro b){
+    // 넓은 면적 우선선택
+    if (a.area != b.area) return a.area > b.area;
 
-	rp = wp = 0;
-
-	queue[wp].r = r;
-	queue[wp++].c = c;
-
-	visit[r][c] = true;
-
-	minR = maxR = r;
-	minC = maxC = c;
-
-	while (rp < wp)
-	{
-		RC out = queue[rp++];
-
-		for (int i = 0; i < 4; i++)
-		{
-			int nr, nc;
-
-			nr = out.r + dr[i];
-			nc = out.c + dc[i];
-
-			if (MAP[out.r][out.c] != MAP[nr][nc] || visit[nr][nc] == true) continue;
-
-			queue[wp].r = nr;
-			queue[wp++].c = nc;
-
-			visit[nr][nc] = true;
-
-			if (nr < minR) minR = nr;
-			if (nc < minC) minC = nc;
-			if (nr > maxR) maxR = nr;
-			if (nc > maxC) maxC = nc;
-		}
-	}
-
-	MICRO ret = { 0 };
-
-	ret.id = MAP[r][c];
-	ret.minR = minR;
-	ret.minC = minC;
-	ret.maxR = maxR;
-	ret.maxC = maxC;
-	ret.count = wp;
-
-	return ret;
+    return a.id < b.id;
 }
 
-void findLiveMicro()
-{
-	mcnt = 0;
-
-	for (int r = 0; r <= N; r++)
-		for (int c = 0; c <= N; c++)
-			visit[r][c] = false;
-
-	bool check[MAX_Q] = { false };
-	for (int r = 0; r < N; r++)
-	{
-		for (int c = 0; c < N; c++)
-		{
-			int id = MAP[r][c];
-			
-			if (id == 0 || dead[id] == true || visit[r][c] == true) continue;
-			
-			MICRO m = BFS(r, c);
-			
-			if (check[id] == true)
-			{
-				dead[id] = true;
-				continue;
-			}
-						
-			check[id] = true;
-			micro[mcnt++] = m; 
-		}
-	}
-	
-	int tcnt = mcnt;
-
-	mcnt = 0;
-	for (int i = 0; i < tcnt; i++)
-	{
-		if (dead[micro[i].id] == true) continue;
-
-		micro[mcnt++] = micro[i];
-	}
+void sortMicro(){
+    for (int i = 0 ; i < mcnt - 1 ; ++i){
+        for (int k = i + 1 ; k < mcnt ; ++k){
+            if (!isPriority(micros[i], micros[k])){
+                Micro temp = micros[i];
+                micros[i] = micros[k];
+                micros[k] = temp;
+            }
+        }
+    }
 }
 
-// a가 우선순위가 더 높으면 true
-bool isPriority(MICRO a, MICRO b)
-{
-	if (a.count != b.count) return a.count > b.count;
-	
-	return a.id < b.id;
+bool checkMove(int newMAP[MAX][MAX], Micro m, int fr, int fc){
+    int sr = m.minR;
+    int sc = m.minC;
+    int er = m.maxR;
+    int ec = m.maxC;
+
+    for (int r = sr ; r <= er ; ++r){
+        for (int c = sc ; c <= ec ; ++c){
+            // 다른 미생물인 경우 || 빈 공간(0)인 경우 무시
+            if (MAP[r][c] != m.id || MAP[r][c] == 0) continue;
+
+            int newR = fr - sr + r;
+            int newC = fc - sc + c;
+
+            // 격자 밖을 넘어가는 경우
+            if (newR >= N || newC >= N) return false;
+
+            // 새 용기에 이미 다른 생물이 있는 경우
+            if (newMAP[newR][newC] != 0) return false;
+        }
+    }
+
+    return true;
 }
 
-void sort()
-{
-	for (int i = 0; i < mcnt - 1; i++)
-	{
-		for (int k = i + 1; k < mcnt; k++)
-		{
-			if (isPriority(micro[i], micro[k]) == false)
-			{
-				MICRO tmp = micro[i];
-				micro[i] = micro[k];
-				micro[k] = tmp;
-			}
-		}
-	}
+void actualMove(int newMAP[MAX][MAX], Micro m, int fr, int fc){
+    int sr = m.minR;
+    int sc = m.minC;
+    int er = m.maxR;
+    int ec = m.maxC;
+
+    for (int r = sr ; r <= er ; ++r){
+        for (int c = sc ; c <= ec ; ++c){
+            if (MAP[r][c] != m.id || MAP[r][c] == 0) continue;
+
+            int newR = fr - sr + r;
+            int newC = fc - sc + c;
+            newMAP[newR][newC] = m.id;
+        }
+    }
 }
 
-bool checkMove(int newMAP[MAX][MAX], MICRO m, int fr, int fc)
-{
-	int sr = m.minR;
-	int sc = m.minC;
-	int er = m.maxR;
-	int ec = m.maxC;
-
-	for (int r = sr; r <= er; r++)
-	{
-		for (int c = sc; c <= ec; c++)
-		{
-			// 미생물 범위에 다른 미생물인 경우, 빈 공간인 경우는 무시
-			if (MAP[r][c] != m.id || MAP[r][c] == 0) continue;
-
-			int newR = fr - sr + r;
-			int newC = fc - sc + c;
-
-			// 격자 밖을 넘어가는 경우
-			if (newR >= N || newC >= N) return false;
-
-			// 새 용기에 이미 다른 생물이 있는 경우
-			if (newMAP[newR][newC] != 0) return false;
-		}
-	}
-
-	return true;
+void moveMicro(int newMAP[MAX][MAX], Micro m){
+    for (int r = 0 ; r <= N ; ++r){
+        for (int c = 0 ; c <= N ; ++c){
+            if (checkMove(newMAP, m, r, c)){
+                actualMove(newMAP, m, r, c);
+                return;
+            }
+        }
+    }
 }
 
-void move(int newMAP[MAX][MAX], MICRO m, int fr, int fc)
-{
-	int sr = m.minR;
-	int sc = m.minC;
-	int er = m.maxR;
-	int ec = m.maxC;
+// 새 배양 용기(newMAP)에 살아있는 미생물을 순서대로 옮김
+// 모두 옮긴 후, 새 배양 용기를 기존 배양 용기(MAP)에 복사
+void moveAllMicro(){
+    int newMAP[MAX][MAX] = { 0 };
 
-	for (int r = sr; r <= er; r++)
-	{
-		for (int c = sc; c <= ec; c++)
-		{
-			if (MAP[r][c] != m.id || MAP[r][c] == 0) continue;
+    // 순서대로 살아있는 미생물을 옮김
+    for (int i = 0 ; i < mcnt ; ++i) moveMicro(newMAP, micros[i]);
 
-			newMAP[fr - sr + r][fc - sc + c] = m.id;
-		}
-	}
+    // 기존 배양 용기에 새 배양 용기를 복사함
+    for (int r = 0 ; r < N ; ++r){
+        for (int c = 0 ; c < N ; ++c){
+            MAP[r][c] = newMAP[r][c];
+        }
+    }
 }
 
-void moveMicro(int newMAP[MAX][MAX], MICRO m)
-{
-	for (int r = 0; r <= N; r++)
-	{
-		for (int c = 0; c <= N; c++)
-		{
-			if (checkMove(newMAP, m, r, c) == true)
-			{
-				move(newMAP, m, r, c);				
-				return;
-			}
-		}
-	}
+int getArea(int id){
+    for (int i = 0 ; i < mcnt ; ++i){
+        if (micros[i].id == id) return micros[i].area;
+    }
+    return -1;
 }
 
-void moveAll()
-{
-	int newMAP[MAX][MAX] = { 0 }; // 새 배양 용기
+int getScore(int maxID){
+    // 인접행렬
+    int company[MAXQ][MAXQ] = { 0 };
 
-	for (int i = 0; i < mcnt; i++) moveMicro(newMAP, micro[i]);
+    for (int r = 0 ; r <= N ; ++r){
+        for (int c = 0 ; c <= N ; ++c){
+            if (MAP[r][c] == 0) continue;
 
-	for (int r = 0; r <= N; r++)
-		for (int c = 0; c <= N; c++)
-			MAP[r][c] = newMAP[r][c];
+            for (int i = 0 ; i < 4 ; ++i){
+                int nr = r + D[i][0];
+                int nc = c + D[i][1];
+
+                int id1 = MAP[r][c];
+                int id2 = MAP[nr][nc];
+
+                if (id1 == id2 || id2 == 0) continue;
+
+                company[id1][id2] = true;
+                company[id2][id1] = true;
+            }
+        }
+    }
+
+    int score = 0;
+
+    for (int i = 1 ; i <= maxID - 1 ; ++i){
+        for (int k = i + 1 ; k <= maxID ; ++k){
+            if (company[i][k] == false) continue; // 인접한 경우에만 둘의 면적을 곱한 값을 score에 추가
+
+            int area1 = getArea(i);
+            int area2 = getArea(k);
+
+            score += (area1 * area2);
+        }
+    }
+
+    return score;
 }
 
-int getCount(int id)
-{
-	for (int i = 0; i < mcnt; i++)
-		if (micro[i].id == id) return micro[i].count;
+void simulate(){
+    for (int id = 1 ; id <= Q ; ++id){
+        int r1, c1, r2, c2;
+        r1 = query[id].r1;
+        c1 = query[id].c1;
+        r2 = query[id].r2;
+        c2 = query[id].c2;
+        
+        // 미생물 투입
+        insert(id, r1, c1, r2, c2);
 
-	return -1; // for debug
+        // 배양 용기 이동
+        findLiveMicro();
+        sortMicro();
+        moveAllMicro();
+
+        // 실험 결과 기록
+        cout << getScore(id) << '\n';
+    }
 }
 
-int getScore(int maxID)
-{
-	int company[MAX_Q][MAX_Q] = { 0 };
-	for (int r = 0; r <= N; r++)
-	{
-		for (int c = 0; c <= N; c++)
-		{
-			if (MAP[r][c] == 0) continue;
-
-			for (int i = 0; i < 4; i++)
-			{
-				int nr, nc;
-
-				nr = r + dr[i];
-				nc = c + dc[i];
-
-				int id1 = MAP[r][c];
-				int id2 = MAP[nr][nc];
-
-				if (id1 == id2 || id2 == 0) continue;
-
-				company[id1][id2] = true;
-				company[id2][id1] = true;
-			}
-		}
-	}
-	
-	int score = 0;
-	for (int i = 1; i <= maxID - 1; i++)
-	{
-		for (int k = i + 1; k <= maxID; k++)
-		{
-			if (company[i][k] == false) continue;
-
-			int count1 = getCount(i);
-			int count2 = getCount(k);
-
-			score += (count1 * count2);
-		}
-	}
-
-	return score;
-}
-
-void simulate()
-{
-	for (int id = 1; id <= Q; id++)
-	{
-		int r1, c1, r2, c2;
-
-		r1 = query[id].r1;
-		c1 = query[id].c1;
-		r2 = query[id].r2;
-		c2 = query[id].c2;
-
-		// 미생물 투입
-		insert(id, r1, c1, r2, c2);				
-
-		// 배양 용기 이동
-		findLiveMicro();
-		sort();
-		moveAll();
-
-		// 실험 결과 기록
-		printf("%d\n", getScore(id));
-	}
-}
-
-int main()
-{
-	// scanf("%d", &T);
-	T = 1;
-	for (int tc = 1; tc <= T; tc++)
-	{
-		input();
-
-		simulate();
-	}
-
-	return 0;
+int main(){
+    fastio();
+    input();
+    simulate();
+    return 0;
 }

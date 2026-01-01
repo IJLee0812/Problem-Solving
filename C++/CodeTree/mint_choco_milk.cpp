@@ -50,8 +50,6 @@ struct Point{
     int r;
     int c;
 };
-queue<Point> myqueue;
-
 
 void fastio(){
     cin.tie(0);
@@ -106,6 +104,7 @@ bool isPriority(STUDENT a, STUDENT b){
 }
 
 void BFS(int r, int c){
+    queue<Point> myqueue;
     myqueue.push({r, c});
     visited[r][c] = true;
 
