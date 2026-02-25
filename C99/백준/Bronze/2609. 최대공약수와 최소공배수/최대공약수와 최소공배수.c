@@ -1,0 +1,1 @@
+int f(int n,int m){if(m==0)return n;else return f(m,n%m);}int main(){int n,m,t,g; scanf("%d %d",&n,&m);if(n<m){t=n;n=m;m=t;}g=f(n,m);printf("%d\n%d",g,n*m/g);return 0;}
