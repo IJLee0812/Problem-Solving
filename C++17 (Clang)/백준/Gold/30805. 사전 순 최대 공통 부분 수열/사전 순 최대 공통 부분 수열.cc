@@ -1,11 +1,12 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #define fastio ios_base::sync_with_stdio(0); cin.tie(0); cout.tie(0);
 using namespace std;
 
 int N, M;
-vector<int> A, B;
+vector<int> A, B, ans;
 
 void input(){
     cin >> N;
@@ -18,58 +19,32 @@ void input(){
 }
 
 void solve(){
-    vector<int> sol;
+    while (!A.empty() && !B.empty()){
+        // 각 배열의 최댓값을 가리키는 iterator 찾기
+        // 주의: 최댓값 여러 개면, 가장 앞에 있는 것 찾음 
+        auto max_a = max_element(A.begin(), A.end());
+        auto max_b = max_element(B.begin(), B.end());
 
-    int a_idx = 0, b_idx = 0;
+        // 최댓값이 같을 때
+        if (*max_a == *max_b){
+            ans.push_back(*max_a);
 
-    while (a_idx < N && b_idx < M){
-        int max_val = -1, next_a = -1, next_b = -1;
-
-        // 100 ~ 1까지 큰 숫자부터 우선적으로 양쪽에 있는지 그리디
-        for (int v = 100 ; v >= 1 ; --v){
-            int tmp_a = -1, tmp_b = -1;
-
-            for (int i = a_idx ; i < N ; ++i){
-                if (A[i] == v){
-                    tmp_a = i;
-                    break;
-                }
-            }
-
-            for (int i = b_idx ; i < M ; ++i){
-                if (B[i] == v){
-                    tmp_b = i;
-                    break;
-                }
-            }
-
-            // 양쪽 모두 해당 숫자 존재 시 갱신
-            if (tmp_a != -1 && tmp_b != -1){
-                max_val = v;
-                next_a = tmp_a;
-                next_b = tmp_b;
-                break;
-            }
+            // 인덱스 + 1 업데이트 (최댓값까지 포함해서 그 앞의 원소 전부 삭제)
+            A.erase(A.begin(), max_a + 1);
+            B.erase(B.begin(), max_b + 1);
         }
 
-        // 종료조건(공통숫자 X)
-        if (max_val == -1) break;
-
-        sol.push_back(max_val);
-
-        // 탐색위치 업데이트
-        a_idx = next_a + 1;
-        b_idx = next_b + 1;
-        
+        // A의 최댓값이 더 클 때
+        else if (*max_a > *max_b) A.erase(max_a);
+        else B.erase(max_b);
     }
 
-    cout << sol.size() << '\n';
-    for (int num : sol) cout << num << ' ';
+    cout << ans.size() << '\n';
+    for (int n : ans) cout << n << ' ';
 }
 
 int main(){
     fastio
     input();
     solve();
-    return 0;
 }
