@@ -24,9 +24,12 @@ struct Dust{
 };
 
 Purifier purifier;
+vector<Dust> dusts;
 
 void input(){
     cin >> R >> C >> T;
+
+    dusts.reserve(2500);
 
     bool isUp = false;
     for (int r = 1 ; r <= R ; ++r){
@@ -47,7 +50,7 @@ void input(){
 }
 
 void diffuse(){
-    vector<Dust> dusts;
+    dusts.clear();
 
     // 1. 현재 맵에 존재하는 모든 미세먼지를 찾아 벡터에 저장
     for (int r = 1 ; r <= R ; ++r)
