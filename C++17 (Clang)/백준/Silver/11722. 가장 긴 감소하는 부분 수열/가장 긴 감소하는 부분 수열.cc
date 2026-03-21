@@ -1,34 +1,26 @@
 #include <iostream>
-#include <vector>
 #include <algorithm>
-#define MAX 1002
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
-
+#define MAX 1002 
 using namespace std;
 
-int N, dp[MAX], ans;
-vector<int> A;
+int A[MAX], N, dp[MAX], ans;
 
 int main(){
     fastio
     cin >> N;
-
-    int tmp;
-    for (int i = 0 ; i < N ; ++i){
-        cin >> tmp;
-        A.push_back(tmp);
-    }
-
-    for (int i = 0 ; i < N ; ++i){
+    
+    for (int i = 1 ; i <= N ; ++i) cin >> A[i];
+    
+    for (int i = N ; i >= 1 ; --i){
         int tmp_max = 0;
-
-        for (int j = 0 ; j < i ; ++j) if (A[i] < A[j]) tmp_max = max(tmp_max, dp[j]);
-
-        dp[i] = tmp_max + 1;
+        
+        for (int j = N ; j > i ; --j) if (A[i] > A[j]) tmp_max = max(tmp_max, dp[j]);
+        
+        dp[i] = tmp_max + 1;      
         ans = max(ans, dp[i]);
     }
-
+    
     cout << ans;
-
     return 0;
 }
