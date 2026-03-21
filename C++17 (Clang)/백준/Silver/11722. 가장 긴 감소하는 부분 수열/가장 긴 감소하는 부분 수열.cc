@@ -19,12 +19,10 @@ int main(){
         A.push_back(tmp);
     }
 
-    reverse(A.begin(), A.end());
-
     for (int i = 0 ; i < N ; ++i){
         int tmp_max = 0;
 
-        for (int j = 0 ; j < i ; ++j) if (A[i] > A[j]) tmp_max = max(tmp_max, dp[j]);
+        for (int j = 0 ; j < i ; ++j) if (A[i] < A[j]) tmp_max = max(tmp_max, dp[j]);
 
         dp[i] = tmp_max + 1;
         ans = max(ans, dp[i]);
