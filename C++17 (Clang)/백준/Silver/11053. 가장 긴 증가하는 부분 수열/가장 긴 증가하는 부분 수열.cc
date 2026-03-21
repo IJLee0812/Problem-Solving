@@ -1,22 +1,29 @@
 #include <iostream>
 #include <algorithm>
-#define MAX 1001
+#define MAX 1002
 using namespace std;
-int N, seq[MAX], D[MAX];
-int main() {
+
+int N, A[MAX], dp[MAX];
+
+int main(){
     cin >> N;
-    for (int i = 1; i <= N; ++i)
-        cin >> seq[i];
-    for (int i = 1; i <= N; ++i) {
-        D[i] = 1; 
-        for (int j = 1; j < i; ++j) {
-            if (seq[i] > seq[j])
-                D[i] = max(D[i], D[j] + 1);
-        }
+
+    for (int i = 1 ; i <= N ; ++i) cin >> A[i];
+
+    for (int i = 1 ; i <= N ; ++i){
+        int tmp_max = 0;
+    
+        for (int j = 1 ; j < i ; ++j)
+            if (A[i] > A[j])
+                tmp_max = max(tmp_max, dp[j]);
+    
+        dp[i] = tmp_max + 1;
     }
-    int MAXV = 0;
-    for (int i = 1; i <= N; ++i)
-        MAXV = max(MAXV, D[i]);
-    cout << MAXV;
+        
+    int ans = 0;
+    for (int i = 1 ; i <= N ; ++i) if (ans < dp[i]) ans = dp[i];
+
+    cout << ans;
+
     return 0;
 }
