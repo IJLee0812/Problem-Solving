@@ -1,33 +1,42 @@
 #include <iostream>
 #include <algorithm>
-#define MAX 1001
+#define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
+#define MAX 1002 
 using namespace std;
-int N, seq[MAX], DL[MAX], DR[MAX], DS[MAX];
-int main() {
+
+int A[MAX], N, lis[MAX], lds[MAX];
+
+int main(){
+    fastio
     cin >> N;
-    for (int i = 1; i <= N; ++i)
-        cin >> seq[i];
-    for (int i = 1; i <= N; ++i) {
-        DL[i] = 1;
-        for (int j = 1; j < i; ++j) {
-            if (seq[i] > seq[j]) {
-                DL[i] = max(DL[i], DL[j] + 1);
-            }
-        }
+
+    for (int i = 1 ; i <= N ; ++i) cin >> A[i];
+
+    // 순방향(왼->오) LIS
+    for (int i = 1 ; i <= N ; ++i){
+        int lis_max = 0;
+
+        for (int j = 1 ; j < i ; ++j) if (A[i] > A[j]) lis_max = max(lis_max, lis[j]);
+
+        lis[i] = lis_max + 1;
     }
-    for (int i = N; i >= 1; --i) {
-        DR[i] = 1;
-        for (int j = N; j > i; --j) {
-            if (seq[i] > seq[j]) {
-                DR[i] = max(DR[i], DR[j] + 1);
-            }
-        }
+
+    // 역방향(오->왼) LDS
+    for (int i = N ; i >= 1 ; --i){
+        int lds_max = 0;
+
+        for (int j = N ; j > i ; --j) if (A[i] > A[j]) lds_max = max(lds_max, lds[j]);
+
+        lds[i] = lds_max + 1;
     }
-    int MAXV = 0;
-    for (int i = 1; i <= N; ++i) {
-        DS[i] = DL[i] + DR[i] - 1; // 바이토닉 부분 수열 길이 (1 중복 제거)
-        if (MAXV < DS[i]) MAXV = DS[i];
+
+    int ans = 0;
+    for (int i = 1 ; i <= N ; ++i){
+        int comp = lis[i] + lds[i] - 1;
+        ans = max(ans, comp);
     }
-    cout << MAXV << '\n';
+
+    cout << ans;
+
     return 0;
 }
