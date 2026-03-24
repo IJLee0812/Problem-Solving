@@ -1,7 +1,6 @@
 #include <iostream>
 #include <queue>
 #include <vector>
-#include <algorithm>
 #include <cmath>
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
 #define MAX 52
@@ -12,7 +11,7 @@ struct Point{
     int x, y;
 };
 
-int N, L, R, Graph[MAX][MAX], Border[MAX][MAX], curr_time = 0, D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+int N, L, R, Graph[MAX][MAX], D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}, curr_time = 0;
 
 bool visited[MAX][MAX];
 
@@ -25,21 +24,21 @@ void input(){
 }
 
 void init(){
-    for (int i = 0 ; i < N ; ++i){
-        for (int j = 0 ; j < N ; ++j){
-            Border[i][j] = 0;
+    for (int i = 0 ; i < N ; ++i)
+        for (int j = 0 ; j < N ; ++j)
             visited[i][j] = false;
-        }
-    }
 }
 
-bool move(int i, int j, int mark){
+bool bfs(int i, int j){
     // 인접 나라 인구 차이가 L명 이상 R명 이하면 국경선 open
     queue<Point> myqueue;
+    vector<Point> united; // 연합에 속할 좌표들을 저장할 벡터
+
     myqueue.push({i, j});
+    united.push_back({i, j});
     visited[i][j] = true;
-    Border[i][j] = mark;
-    bool is_moved = false;
+
+    int sum = Graph[i][j]; // 연합의 총 인구수 누적.
 
     while (!myqueue.empty()){
         Point curr = myqueue.front();
@@ -52,49 +51,33 @@ bool move(int i, int j, int mark){
                 int diff = abs(Graph[nx][ny] - Graph[curr.x][curr.y]);
 
                 if (L <= diff && diff <= R){
-                    is_moved = true;
-                    Border[nx][ny] = mark;
                     visited[nx][ny] = true;
                     myqueue.push({nx, ny});
+                    united.push_back({nx, ny});
+                    sum += Graph[nx][ny];
                 }
             }
         }
     }
 
-    return is_moved;
-}
+    if (united.size() == 1) return false;
 
-void update(int mark){
-    vector<int> pop_sum(mark + 1, 0), pop_cnt(mark + 1, 0);
-
-    for (int i = 0 ; i < N ; ++i){
-        for (int j = 0 ; j < N ; ++j){
-            if (Border[i][j]){ 
-                pop_sum[Border[i][j]] += Graph[i][j];
-                pop_cnt[Border[i][j]]++;
-            }
-        }
-    }
-
-    for (int i = 0 ; i < N ; ++i)
-        for (int j = 0 ; j < N ; ++j)
-            if (Border[i][j]) Graph[i][j] = pop_sum[Border[i][j]] / pop_cnt[Border[i][j]];
+    int result = sum / united.size();
+    for (auto p : united) Graph[p.x][p.y] = result;
+    return true;
 }
 
 void simulation(){
     while (true){
         init();
-
         bool is_moved = false;
-        int mark = 1;
 
         for (int i = 0 ; i < N ; ++i)
             for (int j = 0 ; j < N ; ++j)
-                if (!visited[i][j] && move(i, j, mark++)) is_moved = true;
+                if (!visited[i][j] && bfs(i, j)) is_moved = true;
         
         if (!is_moved) break;
 
-        update(mark);
         curr_time++;
     }
 
