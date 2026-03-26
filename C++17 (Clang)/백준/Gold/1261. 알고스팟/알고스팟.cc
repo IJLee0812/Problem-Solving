@@ -1,73 +1,73 @@
 #include <iostream>
 #include <vector>
-#include <queue>
-#include <string>
+#include <deque>
 #include <algorithm>
 #define INF 1e9
-#define MAX 10002
+#define MAX 102
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
 
 using namespace std;
 
-vector<pair<int, int>> Graph[MAX];
+int Graph[MAX][MAX];
 
-int D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}, M, N, V, start_node, end_node;
-int dist[MAX];
+struct Point{
+    int x, y;
+};
+
+int D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}, M, N;
+
+int dist[MAX][MAX];
 
 void input(){
     cin >> M >> N; // M: 가로, N: 세로
+    string tmp;
+    for (int i = 1 ; i <= N ; ++i){
+        cin >> tmp;
+        for (int j = 1 ; j <= M ; ++j) Graph[i][j] = tmp[j - 1] - '0';
 
-    vector<string> board(N);
-    for (int i = 0 ; i < N ; ++i) cin >> board[i];
+    }
+}
 
-    // coord compression (2-dim to 1-dim)
-    for (int r = 1 ; r <= N ; ++r){
-        for (int c = 1 ; c <= M ; ++c){
-            int u = (r - 1) * M + c;
+void init_dist(){
+    for (int i = 1 ; i <= N ; ++i)
+        for (int j = 1 ; j <= M ; ++j)
+            dist[i][j] = INF;
+}
 
-            for (int d = 0 ; d < 4 ; ++d){
-                int nr = r + D[d][0], nc = c + D[d][1];
+void solve(){
+    deque<Point> mydeque;
 
-                if (nr >= 1 && nr <= N && nc >= 1 && nc <= M){
-                    int v = (nr - 1) * M + nc; // 다음 칸
-                    int weight = board[nr - 1][nc - 1] - '0';
+    init_dist();
 
-                    Graph[u].push_back({v, weight});
+    mydeque.push_back({1, 1});
+    dist[1][1] = 0;
+
+    while (!mydeque.empty()){
+        Point curr = mydeque.front();
+
+        mydeque.pop_front();
+
+        for (int i = 0 ; i < 4 ; ++i){
+            int nx = curr.x + D[i][0], ny = curr.y + D[i][1];
+
+            if (nx >= 1 && nx <= N && ny >= 1 && ny <= M){
+                if (Graph[nx][ny] == 1){ // 벽 뚫기
+                    if (dist[nx][ny] > 1 + dist[curr.x][curr.y]){
+                        dist[nx][ny] = 1 + dist[curr.x][curr.y];
+                        mydeque.push_back({nx, ny}); // 비용이 늘었으니, 맨 뒤에 줄세움
+                    }
+                }
+                else{ // 벽 안 뚫기
+                    if (dist[nx][ny] > dist[curr.x][curr.y]){
+                        dist[nx][ny] = dist[curr.x][curr.y];
+                        mydeque.push_front({nx, ny}); // 비용이 그대로니, 맨 앞으로 보내도 됨
+                    }
                 }
             }
         }
     }
 
-    V = N * M;
-    start_node = 1, end_node = V;
-}
-
-void solve(){
-    fill(dist, dist + V + 1, INF);
-
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-
-    pq.push({0, start_node});
-    dist[start_node] = 0;
-
-    while (!pq.empty()){
-        int u_cost = pq.top().first, u = pq.top().second;
-        
-        pq.pop();
-
-        if (u_cost > dist[u]) continue;
-        
-        for (auto node : Graph[u]){
-            int v = node.first, v_cost = node.second;
-
-            if (dist[v] > u_cost + v_cost){
-                dist[v] = u_cost + v_cost;
-                pq.push({dist[v], v});
-            }
-        }
-    }
-
-    cout << dist[end_node];
+    cout << dist[N][M];
 }
 
 int main(){
