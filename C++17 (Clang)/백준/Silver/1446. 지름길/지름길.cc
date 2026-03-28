@@ -1,53 +1,39 @@
 #include <iostream>
 #include <vector>
-#include <queue>
 #include <algorithm>
 #define MAX 10002
-#define INF 1e9
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
 
 using namespace std;
 
-int N, D, dist[MAX];
-vector<pair<int, int>> Graph[MAX];
+int dist[MAX], N, D;
+
+vector<pair<int, int>> shortcuts[MAX];
 
 void input(){
     cin >> N >> D;
 
-    for (int i = 0 ; i < D ; ++i) Graph[i].push_back({i + 1, 1});
-
-    int start, end, length; // 지름길 시작 위치, 도착 위치, 길이
+    int start, end, length;
     for (int i = 0 ; i < N ; ++i){
         cin >> start >> end >> length;
 
-        // 필터링(불필요 저장 방지)
-        if (end > D) continue;
+        // 필터링 로직(그냥 걸어가는 것 보다 길면 안 받음, e.g. 110 140 90)
+        if (end > D || end - start <= length) continue;
 
-        Graph[start].push_back({end, length});
+        shortcuts[end].push_back({start, length});
     }
 }
 
+// DP
 void solve(){
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-
-    fill(dist, dist + D + 1, INF);
     dist[0] = 0;
-    pq.push({dist[0], 0});
 
-    while (!pq.empty()){
-        int curr_dist = pq.top().first, curr_loc = pq.top().second;
+    for (int i = 1 ; i <= D ; ++i){
+        dist[i] = dist[i - 1] + 1;
 
-        pq.pop();
-
-        if (curr_dist > dist[curr_loc]) continue;
-
-        for (const auto& node : Graph[curr_loc]){
-            int next_loc = node.first, next_dist = node.second;
-
-            if (dist[next_loc] > curr_dist + next_dist){
-                dist[next_loc] = curr_dist + next_dist;
-                pq.push({dist[next_loc], next_loc});
-            }
+        for (const auto& sc : shortcuts[i]){
+            int start = sc.first, length = sc.second;
+            dist[i] = min(dist[i], dist[start] + length);
         }
     }
 
