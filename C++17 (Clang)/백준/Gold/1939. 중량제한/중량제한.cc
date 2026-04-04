@@ -4,16 +4,14 @@
 #include <algorithm>
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
 #define MAX 10002
-#define INF 1e18
 
 using namespace std;
-using ll = long long;
 
 vector<pair<int, int>> Graph[MAX];
 
-int N, M, A, B, C, start_loc, end_loc; // A -> B, Cost = C
+int N, M, A, B, C, start_loc, end_loc;
 
-ll weight[MAX];
+int max_weight = 0; // 입력받은 다리 중 가장 큰 중량 기록
 
 void input(){
     cin >> N >> M;
@@ -23,40 +21,57 @@ void input(){
 
         Graph[A].push_back({B, C});
         Graph[B].push_back({A, C});
+        max_weight = max(max_weight, C); // 이분탐색 right 범위기록
     }
 
     cin >> start_loc >> end_loc;
 }
 
-void solve(){
-    priority_queue<pair<ll, int>> pq;
-    pq.push({INF, start_loc});
+bool BFS(int target_weight){
+    queue<int> myqueue;
+    vector<bool> visited(N + 1, false);
 
-    fill(weight, weight + N + 1, 0);
-    weight[start_loc] = INF;
+    myqueue.push(start_loc);
+    visited[start_loc] = true;
 
-    while (!pq.empty()){
-        ll curr_weight = pq.top().first;
-        int curr_loc = pq.top().second;
+    while (!myqueue.empty()){
+        int curr = myqueue.front();
 
-        pq.pop();
+        myqueue.pop();
 
-        if (weight[curr_loc] > curr_weight) continue;
+        // 도착가능 리턴
+        if (curr == end_loc) return true;
 
-        for (const auto& island : Graph[curr_loc]){
-            int new_loc = island.first;
-            ll new_weight = island.second;
+        for (const auto& next_island : Graph[curr]){
+            int next_loc = next_island.first, limit = next_island.second;
 
-            int next_bottleneck  = min(curr_weight, new_weight);
-
-            if (weight[new_loc] < next_bottleneck){
-                weight[new_loc] = next_bottleneck;
-                pq.push({weight[new_loc], new_loc});
+            // 다리가 버틸 수 있는 하중(limit)이 타겟 무게 이상이면 건넘
+            if (!visited[next_loc] && limit >= target_weight){
+                visited[next_loc] = true;
+                myqueue.push(next_loc);
             }
         }
     }
 
-    cout << weight[end_loc];
+    return false;
+}
+
+void solve(){
+    int left = 1, right = max_weight;
+    int res = 0; // 최대 중량 기록
+
+    while (left <= right){
+        int mid = (left + right) / 2;
+
+        if (BFS(mid)){
+            // 갈 수 있다면 정답 기록 + 더 무겁게 시도
+            res = mid;
+            left = mid + 1;
+        }
+        else right = mid - 1; // 갈 수 없다면 무게 줄이기
+    }
+
+    cout << res;
 }
 
 int main(){
