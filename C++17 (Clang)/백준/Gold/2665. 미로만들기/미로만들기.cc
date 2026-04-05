@@ -1,24 +1,17 @@
 #include <iostream>
-#include <queue>
-#include <vector>
+#include <deque>
 #include <algorithm>
 #define fastio ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
 #define MAX 52
-#define INF 1e9
 
 using namespace std;
 
-int Graph[MAX][MAX], D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-
-int dist[MAX][MAX], N;
+int Graph[MAX][MAX], D[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}, N;
 
 struct Point{
-    int x, y;
-    const bool operator<(const Point& p) const{
-        if (x == p.x) return y < p.y;
-        return x < p.x;
-    }
+    int x, y, change_cnt;
 };
+bool visited[MAX][MAX];
 
 void input(){
     cin >> N;
@@ -30,38 +23,36 @@ void input(){
 }
 
 void solve(){
-    priority_queue<pair<int, Point>, vector<pair<int, Point>>, greater<pair<int, Point>>> pq;
+    deque<Point> mydeque;
 
-    for (int i = 0 ; i < N ; ++i)
-        for (int j = 0 ; j < N ; ++j)
-            dist[i][j] = INF;
+    mydeque.push_back({0, 0, 0});
+    visited[0][0] = true;
 
-    dist[0][0] = 0;
-    pq.push({0, {0, 0}}); // dist, Point;
+    while (!mydeque.empty()){
+        Point curr = mydeque.front();
 
-    while (!pq.empty()){
-        int curr_dist = pq.top().first;
-        Point curr = pq.top().second;
+        mydeque.pop_front();
 
-        // 주의
-        pq.pop();
-
-        // opt
-        if (curr_dist > dist[curr.x][curr.y]) continue;
+        if (curr.x == N - 1 && curr.y == N - 1){
+            cout << curr.change_cnt;
+            return;
+        }
 
         for (int i = 0 ; i < 4 ; ++i){
             int nx = curr.x + D[i][0], ny = curr.y + D[i][1];
 
-            if (nx >= 0 && nx < N && ny >= 0 && ny < N){
-                if (dist[nx][ny] > dist[curr.x][curr.y] + !Graph[nx][ny]){
-                    dist[nx][ny] = dist[curr.x][curr.y] + !Graph[nx][ny];
-                    pq.push({dist[nx][ny], {nx, ny}});
-                }
+            if (nx >= 0 && nx < N && ny >= 0 && ny < N && !visited[nx][ny]){
+                visited[nx][ny] = true;
+
+                // 비용이 1인 길은 나중에 탐색(덱 뒤편)
+                if (Graph[nx][ny] == 0) mydeque.push_back({nx, ny, curr.change_cnt + 1});
+                
+                // 비용이 0인 길은 빠르게 먼저 탐색(덱 앞에)
+                else if (Graph[nx][ny] == 1) mydeque.push_front({nx, ny, curr.change_cnt});
+                
             }
         }
     }
-
-    cout << dist[N - 1][N - 1];
 }
 
 int main(){
