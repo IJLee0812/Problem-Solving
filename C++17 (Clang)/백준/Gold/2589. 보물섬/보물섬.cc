@@ -77,6 +77,12 @@ void solve(){
         Point target = land_points.front();
         land_points.pop();
 
+        int x = target.x, y = target.y;
+
+        if (x - 1 >= 0 && x + 1 < N && Graph[x - 1][y] == 1 && Graph[x + 1][y] == 1) continue;
+
+        if (y - 1 >= 0 && y + 1 < M && Graph[x][y - 1] == 1 && Graph[x][y + 1] == 1) continue;
+
         shortest_time = max(shortest_time, BFS({target.x, target.y}));
     }
 
