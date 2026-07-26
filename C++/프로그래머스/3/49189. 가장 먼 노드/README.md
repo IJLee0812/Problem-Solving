@@ -1,10 +1,10 @@
 # [level 3] 가장 먼 노드 - 49189 
 
-[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/49189) 
+[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/49189?gad_source=1&gad_campaignid=23776046558&gbraid=0AAAAAC_c4nD3zOzZ4WZBdYcaU2vR2V3cg&gclid=CjwKCAjwvZHTBhAlEiwA1ug5P5OhCxiFVZC76ONIoiba_Wf-nRgOw2yRtcJ-hYJQDtOdMUkUh_7I6BoC9XkQAvD_BwE) 
 
 ### 성능 요약
 
-메모리: 14.3 MB, 시간: 5.52 ms
+메모리: 14.2 MB, 시간: 5.91 ms
 
 ### 구분
 
@@ -16,7 +16,7 @@
 
 ### 제출 일자
 
-2026년 07월 25일 14:22:37
+2026년 07월 26일 12:11:59
 
 ### 문제 설명
 

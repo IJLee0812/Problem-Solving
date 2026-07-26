@@ -2,20 +2,23 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#define MAX 20002   
 
 using namespace std;
 
 int solution(int n, vector<vector<int>> edge) {
-    vector<vector<int>> adj(n + 1);    
+    int answer = 0;
+    vector<vector<int>> Graph(n + 1);
     
-    for (auto& e : edge){
-        adj[e[0]].push_back(e[1]);
-        adj[e[1]].push_back(e[0]);
+    for (const auto& e : edge){
+        Graph[e[0]].push_back(e[1]);
+        Graph[e[1]].push_back(e[0]);
     }
     
     int max_dist = 0;
     
-    vector<int> dist(n + 1, -1); // init -1 이면 하나갖다가 dist 랑 visited 범용으로 사용가능 
+    vector<int> dist(n + 1, -1);
+    
     queue<int> myqueue;
     myqueue.push(1);
     dist[1] = 0;
@@ -24,17 +27,15 @@ int solution(int n, vector<vector<int>> edge) {
         int curr = myqueue.front();
         myqueue.pop();
         
-        for (auto& next : adj[curr]){
-            if (dist[next] == -1){
+        for (const auto& next : Graph[curr]){
+            if (dist[next] == -1){ // 아직 방문X
                 dist[next] = dist[curr] + 1;
                 myqueue.push(next);
             }
             
-            if (dist[next] > max_dist) max_dist = dist[next];
+            max_dist = max(max_dist, dist[next]);
         }
     }
-    
-    int answer = 0;
     
     for (int i = 1 ; i <= n ; ++i)
         if (dist[i] == max_dist) answer++;
