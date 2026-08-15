@@ -5,39 +5,20 @@ using namespace std;
 
 vector<int> solution(vector<int> progresses, vector<int> speeds) {
     vector<int> answer;
+    int max_day = 0;
     
-    int curr_idx = 0, max_idx = progresses.size() - 1;
-
-    while (curr_idx <= max_idx){
-        int num_of_completed_progress = 0;
-        
-        for (int i = curr_idx ; i <= max_idx ; ++i){
-            progresses[i] += speeds[i]; // 하루 개발.
+    for (int i = 0 ; i < progresses.size() ; ++i){
+        int remain = 100 - progresses[i];
+        int curr_day = (remain % speeds[i] == 0) ? (remain / speeds[i]) : (remain / speeds[i] + 1);
+    
+        // 첫 번째 배포이거나, 이전 배포 그룹보다 늦게 끝나는 기능일 경우
+        if (answer.empty() || curr_day > max_day){
+            answer.push_back(1);
+            max_day = curr_day;
         }
-        
-        
-        for (int i = curr_idx ; i <= max_idx ; ++i){
-            if (progresses[curr_idx] >= 100){
-                curr_idx += 1;
-                num_of_completed_progress += 1;
-            }
-        }
-        
-        if (num_of_completed_progress > 0)
-            answer.push_back(num_of_completed_progress);
-        
+        // 이전 배포 그룹과 함께 배포가능한 경우
+        else answer.back()++; // 마지막 배포 그룹의 기능 개수 1 증가. back() -> ref 반환
     }
-    
+        
     return answer;
 }
-
-
-/*
-- 뒤에 있는 기능이 앞에 있는 기능보다 먼저 개발 가능.
-- 뒤에 있는 기능은 앞에 있는 기능 배포 시 함께 배포되어야 함
-- progresses 배열: 기능 순서(먼저 배포되어야 함) 대로 작업 진도(100 미만)가 적힌 int 배열
-- speeds 배열: 각 작업의 개발 속도
-
-
-- output: 각 배포마다 몇 개의 기능이 배포되는가?
-*/
