@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <queue>
 #include <algorithm>
 #include <cmath>
@@ -6,13 +5,13 @@
 
 using namespace std;
 
-int BFS(int start, int cut_node, int n, const vector<vector<int>>& adj){
-    vector<bool> visited(n + 1, false);
-    int count = 1; // start node 포함 = 1
+int BFS(int exc_start, int exc_end, int n, const vector<vector<int>>& adj){
     queue<int> myqueue;
-    myqueue.push(start);
-    visited[start] = true; 
-    visited[cut_node] = true; // 끊기 = visited true 표시하기와 동치
+    myqueue.push(exc_start);
+    int cnt = 1;
+    vector<bool> visited(n + 1, false);
+    visited[exc_start] = true;
+    visited[exc_end] = true;
     
     while (!myqueue.empty()){
         int curr = myqueue.front();
@@ -22,28 +21,31 @@ int BFS(int start, int cut_node, int n, const vector<vector<int>>& adj){
             if (!visited[next]){
                 visited[next] = true;
                 myqueue.push(next);
-                count++;
+                cnt++;
             }
         }
     }
     
-    return count;
+    return cnt;
 }
 
 int solution(int n, vector<vector<int>> wires) {
     int answer = 123;
+    
     vector<vector<int>> adj(n + 1);
+    
     for (const auto& wire : wires){
         int u = wire[0], v = wire[1];
+        
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
     
-    for (const auto& wire : wires){ // "wire: 끊을 노드"
-        int u = wire[0], v = wire[1];
-        int cnt = BFS(u, v, n, adj);
+    for (const auto& wire : wires){
+        int exc_start = wire[0], exc_end = wire[1];
         
-        int diff = abs(2 * cnt - n);
+        int a = BFS(exc_start, exc_end, n, adj);
+        int diff = abs(2 * a - n);
         
         answer = min(answer, diff);
     }
